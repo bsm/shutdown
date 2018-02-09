@@ -1,6 +1,7 @@
 package shutdown
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,33 +13,44 @@ var defaultSignals = []os.Signal{
 	syscall.SIGTERM,
 }
 
-type Server interface {
-	ListenAndServe() error
+// Context implements context.Context but optionally exposes wait for
+type Context interface {
+	context.Context
+
+	// WaitFor waits for a blocking method to complete
+	WaitFor(blocking func() error, signals ...os.Signal) error
+}
+
+// WithContext inits a new Context
+func WithContext(parent context.Context) Context {
+	ctx, cancel := context.WithCancel(parent)
+	return &shutdown{Context: ctx, cancel: cancel}
+}
+
+type shutdown struct {
+	context.Context
+	cancel func()
 }
 
 // WaitFor accepts a blocking callback function and waits
 // for the callback to return or a signal to trigger
-func WaitFor(blocking func() error, signals ...os.Signal) error {
-	serverErrs := make(chan error, 1)
+func (s *shutdown) WaitFor(blocking func() error, signals ...os.Signal) error {
+	errs := make(chan error, 1)
 	go func() {
-		serverErrs <- blocking()
+		errs <- blocking()
 	}()
 
-	termSignals := make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 1)
 	if len(signals) == 0 {
 		signals = defaultSignals
 	}
-	signal.Notify(termSignals, signals...)
+	signal.Notify(sigs, signals...)
 
 	select {
-	case err := <-serverErrs:
+	case err := <-errs:
 		return err
-	case <-termSignals:
+	case <-sigs:
+	case <-s.Done():
 	}
-	return nil
-}
-
-// Wait waits for a Server instance to shut down or a signal to trigger
-func Wait(srv Server, signals ...os.Signal) error {
-	return WaitFor(srv.ListenAndServe, signals...)
+	return s.Err()
 }

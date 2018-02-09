@@ -1,24 +1,24 @@
 package shutdown_test
 
 import (
+	"context"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/bsm/shutdown"
 )
 
 func Example() {
-	h := http.FileServer(http.Dir("/usr/share/doc"))
-	s := &http.Server{
+	ctx := shutdown.WithContext(context.Background())
+	srv := &http.Server{
 		Addr:    ":8080",
-		Handler: h,
+		Handler: http.FileServer(http.Dir("/usr/share/doc")),
 	}
+	defer srv.Shutdown(context.Background())
 
-	err := shutdown.Wait(s)
-	if err != nil {
-		log.Fatal("FATAL ", err.Error())
+	err := ctx.WaitFor(srv.ListenAndServe)
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatalln("Server error", err)
 	}
-	s.SetKeepAlivesEnabled(false)
-	time.Sleep(time.Second)
+	log.Println("Shutting down ...")
 }
