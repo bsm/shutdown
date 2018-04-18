@@ -50,6 +50,7 @@ func (s *shutdown) WaitFor(blocking func() error, signals ...os.Signal) error {
 	case err := <-errs:
 		return err
 	case <-sigs:
+		s.cancel()
 	case <-s.Done():
 	}
 	return s.Err()
