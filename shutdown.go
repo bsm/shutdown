@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"golang.org/x/xerrors"
 )
 
 var defaultSignals = []os.Signal{
@@ -35,6 +37,8 @@ type shutdown struct {
 // WaitFor accepts a blocking callback function and waits
 // for the callback to return or a signal to trigger
 func (s *shutdown) WaitFor(blocking func() error, signals ...os.Signal) error {
+	defer s.cancel()
+
 	errs := make(chan error, 1)
 	go func() {
 		errs <- blocking()
@@ -50,8 +54,11 @@ func (s *shutdown) WaitFor(blocking func() error, signals ...os.Signal) error {
 	case err := <-errs:
 		return err
 	case <-sigs:
-		s.cancel()
 	case <-s.Done():
 	}
-	return s.Err()
+
+	if err := s.Err(); err != nil && !xerrors.Is(err, context.Canceled) {
+		return err
+	}
+	return nil
 }
