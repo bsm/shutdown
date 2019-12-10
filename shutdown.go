@@ -2,11 +2,10 @@ package shutdown
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"golang.org/x/xerrors"
 )
 
 var defaultSignals = []os.Signal{
@@ -57,7 +56,7 @@ func (s *shutdown) WaitFor(blocking func() error, signals ...os.Signal) error {
 	case <-s.Done():
 	}
 
-	if err := s.Err(); err != nil && !xerrors.Is(err, context.Canceled) {
+	if err := s.Err(); err != nil && !errors.Is(err, context.Canceled) {
 		return err
 	}
 	return nil
