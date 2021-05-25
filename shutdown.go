@@ -14,13 +14,15 @@ var defaultSignals = []os.Signal{
 	syscall.SIGTERM,
 }
 
-// Wait accepts a blocking callback function and waits
-// for the callback to return or a signal to trigger
+// Wait accepts a callback function and waits for the callback to return or for
+// a signal to trigger. If nil is passed instead of a function, Wait will block
+// until a signal triggers.
 func Wait(blocking func() error, signals ...os.Signal) error {
 	return WaitContext(context.Background(), blocking, signals...)
 }
 
-// WaitContext behaves like Wait but with a custom parent context.
+// WaitContext behaves like Wait but with a parent context, which may include a
+// deadline or a custom cancellation.
 func WaitContext(parent context.Context, blocking func() error, signals ...os.Signal) error {
 	if len(signals) == 0 {
 		signals = defaultSignals
@@ -28,6 +30,10 @@ func WaitContext(parent context.Context, blocking func() error, signals ...os.Si
 
 	ctx, stop := signal.NotifyContext(parent, signals...)
 	defer stop()
+
+	if blocking == nil {
+		blocking = func() error { <-ctx.Done(); return nil }
+	}
 
 	errs := make(chan error, 1)
 	go func() {

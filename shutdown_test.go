@@ -42,3 +42,21 @@ func TestWait_fails_immediately(t *testing.T) {
 		t.Fatalf("expected speficic error, got %v", err)
 	}
 }
+
+func TestWaitContext_nil_callback(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(10 * time.Millisecond)
+		cancel()
+	}()
+
+	err := shutdown.WaitContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if err := ctx.Err(); err == nil {
+		t.Fatalf("expected error, got nil")
+	} else if err != context.Canceled {
+		t.Fatalf("expected speficic error, got %v", err)
+	}
+}
