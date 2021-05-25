@@ -1,3 +1,3 @@
 module github.com/bsm/shutdown
 
-go 1.13
+go 1.16
