@@ -11,7 +11,7 @@ import (
 	"github.com/bsm/shutdown"
 )
 
-func Example() {
+func ExampleWait() {
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: http.FileServer(http.Dir("/usr/share/doc")),
