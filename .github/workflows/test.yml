@@ -8,4 +8,4 @@ on:
       - main
 jobs:
   reuse:
-    uses: bsm/misc/github/workflows/test-go.yaml@main
+    uses: bsm/misc/.github/workflows/test-go.yaml@main
