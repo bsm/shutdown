@@ -7,18 +7,5 @@ on:
     branches:
       - main
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: golangci/golangci-lint-action@v8
-  test:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
-        with:
-          go-version-file: ./go.mod
-          cache-dependency-path: ./go.sum
-      - run: go test ./...
+  reuse:
+    uses: bsm/misc/github/workflows/test-go.yaml@main
