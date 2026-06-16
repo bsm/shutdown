@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
 jobs:
-  reuse:
-    uses: bsm/misc/.github/workflows/test-go.yaml@main
+  go:
+    uses: bsm/misc/.github/workflows/test-go.yml@main

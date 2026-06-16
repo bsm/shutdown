@@ -10,6 +10,7 @@ Wait for servers to terminate gracefully.
 ```go
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -17,5 +18,5 @@ import (
 	"github.com/bsm/shutdown"
 )
 
-func main() {{ "Example" | code }}
+func main() {{ "ExampleWait" | code }}
 ```

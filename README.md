@@ -10,6 +10,7 @@ Wait for servers to terminate gracefully.
 ```go
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -26,7 +27,7 @@ func main() {
 	// Wait for either SIGINT/SIGTERM or ListenAndServe to exit.
 	// Handle errors.
 	err := shutdown.Wait(srv.ListenAndServe)
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalln("Server error", err)
 	}
 
