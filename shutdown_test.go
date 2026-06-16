@@ -2,7 +2,7 @@ package shutdown_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 	"testing"
@@ -20,7 +20,7 @@ func ExampleWait() {
 	// Wait for either SIGINT/SIGTERM or ListenAndServe to exit.
 	// Handle errors.
 	err := shutdown.Wait(srv.ListenAndServe)
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalln("Server error", err)
 	}
 
@@ -35,11 +35,12 @@ func ExampleWait() {
 }
 
 func TestWait_fails_immediately(t *testing.T) {
-	err := shutdown.Wait(func() error { return fmt.Errorf("doh!") })
+	sentinel := errors.New("doh!")
+	err := shutdown.Wait(func() error { return sentinel })
 	if err == nil {
 		t.Fatalf("expected error, got nil")
-	} else if err.Error() != "doh!" {
-		t.Fatalf("expected speficic error, got %v", err)
+	} else if !errors.Is(err, sentinel) {
+		t.Fatalf("expected specific error, got %v", err)
 	}
 }
 
@@ -56,7 +57,7 @@ func TestWaitContext_nil_callback(t *testing.T) {
 	}
 	if err := ctx.Err(); err == nil {
 		t.Fatalf("expected error, got nil")
-	} else if err != context.Canceled {
-		t.Fatalf("expected speficic error, got %v", err)
+	} else if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected specific error, got %v", err)
 	}
 }

@@ -36,7 +36,10 @@ func GracefulContext(ctx context.Context, start StartFunc, shutdown ShutdownFunc
 		return err
 	}
 
-	timeout, cancel := context.WithTimeout(context.Background(), DefaultShutdownTimeout)
+	// Detach the parent's cancellation/deadline so shutdown always gets the full
+	// timeout (the parent may already be cancelled, e.g. by the signal that
+	// triggered the shutdown), while still preserving any values it carries.
+	timeout, cancel := context.WithTimeout(context.WithoutCancel(ctx), DefaultShutdownTimeout)
 	defer cancel()
 
 	if err := shutdown(timeout); err != nil {
