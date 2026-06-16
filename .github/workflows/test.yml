@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
 jobs:
   go:
     uses: bsm/misc/.github/workflows/test-go.yml@main
